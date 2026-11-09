@@ -1,0 +1,18 @@
+# Tudo que é SEU (posts, mídia, tags, notas, vault) fica em dados/ e nunca vai pro git
+# Everything personal lives in dados/ and is never committed
+dados/*
+!dados/entrada/
+dados/entrada/*
+!dados/entrada/LEIA-ME.txt
+
+# Cookies / sessões
+cookies*.txt
+*.cookies
+
+__pycache__/
+*.pyc
+.venv/
+venv/
+.vscode/
+.idea/
+.DS_Store

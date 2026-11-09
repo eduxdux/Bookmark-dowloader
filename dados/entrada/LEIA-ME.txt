@@ -1,0 +1,6 @@
+Coloque aqui os arquivos baixados pelos snippets do console:
+  x_bookmarks_full_*.json   (x/console_snippet.js)
+  ig_links_*.json           (instagram/console_snippet.js)
+(Se você esquecer, o programa também procura na sua pasta Downloads.)
+
+Put the files downloaded by the console snippets here (Downloads folder is also searched).

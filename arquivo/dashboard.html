@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meu arquivo</title>
+<style>
+  :root { --bg:#f6f6f4; --card:#fff; --tx:#16181c; --mut:#6b7280; --line:#e5e5e0; --acc:#2563eb; --acc-tx:#fff; --fav:#d99a00; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0f1114; --card:#181b20; --tx:#e7e9ea; --mut:#8b949e; --line:#2a2e35; --acc:#5b8def; --acc-tx:#0f1114; --fav:#f0b429; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--tx); font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; display:flex; min-height:100vh; }
+  button, input, select, textarea { font:inherit; color:inherit; }
+  aside { width:250px; flex:none; border-right:1px solid var(--line); padding:16px 12px; position:sticky; top:0; height:100vh; overflow:auto; }
+  aside h2 { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--mut); margin:18px 8px 6px; font-weight:600; }
+  .nav { display:flex; justify-content:space-between; gap:8px; width:100%; text-align:left; background:none; border:0; border-radius:8px; padding:6px 8px; cursor:pointer; }
+  .nav:hover { background:var(--line); }
+  .nav.on { background:var(--tx); color:var(--bg); }
+  .nav span:last-child { color:var(--mut); font-size:12px; }
+  .nav.on span:last-child { color:inherit; opacity:.7; }
+  .nav .n { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  section { flex:1; min-width:0; }
+  header { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line); display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:12px 16px; }
+  input[type=search], select { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:8px 12px; }
+  input[type=search] { flex:1 1 240px; min-width:0; }
+  .chip { border:1px solid var(--line); background:var(--card); border-radius:99px; padding:5px 12px; cursor:pointer; }
+  .chip.on { background:var(--tx); color:var(--bg); border-color:var(--tx); }
+  #count { color:var(--mut); font-size:13px; margin-left:auto; }
+  #grid { columns:280px; column-gap:14px; padding:16px; }
+  .thumb { position:relative; }
+  /* modos de visualização */
+  #grid.v-grade, .g { columns:auto; display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+  #grid.v-grade .card, .g .card { margin:0; display:flex; flex-direction:column; }
+  #grid.v-grade .card img.m { aspect-ratio:1; object-fit:cover; }
+  #grid.v-grade .txt { -webkit-line-clamp:2; }
+  #grid.v-grade .tags { display:none; }
+  #grid.v-grade .card.post .txt, #grid.v-tempo .card.post .txt { -webkit-line-clamp:7; }
+  .who { display:flex; align-items:center; gap:8px; min-width:0; }
+  .who .nm { min-width:0; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .av { width:30px; height:30px; border-radius:99px; flex:none; object-fit:cover; background:var(--line); display:grid; place-items:center; font-size:13px; font-weight:600; color:var(--mut); }
+  .card.post .txt { font-size:15px; margin-top:8px; -webkit-line-clamp:10; }
+  .card.post .body { padding:14px; }
+  .card .src { margin:8px 0 0; }
+  #grid.v-lista { columns:auto; display:flex; flex-direction:column; gap:8px; }
+  #grid.v-lista .card { margin:0; display:flex; }
+  #grid.v-lista .thumb { width:130px; flex:none; background:var(--line); }
+  #grid.v-lista .card img.m { height:100%; max-height:130px; object-fit:cover; aspect-ratio:1; }
+  #grid.v-lista .body { flex:1; min-width:0; }
+  #grid.v-lista .txt { -webkit-line-clamp:2; }
+  #grid.v-lista .fav { opacity:1; position:static; margin:8px; align-self:center; background:none; color:var(--mut); }
+  #grid.v-lista .fav.on { color:var(--fav); }
+  #grid.v-lista .pick { left:140px; }
+  #grid.v-tempo { columns:auto; padding:0 16px 16px; }
+  .grp h3 { margin:22px 2px 10px; font-size:14px; color:var(--mut); font-weight:600; text-transform:capitalize; }
+  .grp .g { grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); align-items:start; }
+  .views { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .views button { background:var(--card); border:0; padding:6px 10px; cursor:pointer; border-right:1px solid var(--line); }
+  .views button:last-child { border-right:0; }
+  .views button.on { background:var(--tx); color:var(--bg); }
+  #filtros { flex-basis:100%; display:none; gap:8px; flex-wrap:wrap; align-items:center; padding-top:4px; }
+  #filtros.on { display:flex; }
+  #filtros select, #filtros input { max-width:170px; }
+  #filtros label { font-size:12px; color:var(--mut); display:flex; flex-direction:column; gap:2px; }
+  #filtros input[type=text], #filtros input[type=date] { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:7px 10px; }
+  .badge-n { background:var(--acc); color:var(--acc-tx); border-radius:99px; font-size:11px; padding:0 6px; margin-left:4px; }
+  .card { position:relative; break-inside:avoid; background:var(--card); border:1px solid var(--line); border-radius:14px; margin:0 0 14px; overflow:hidden; cursor:pointer; }
+  .card.sel { outline:2px solid var(--acc); }
+  .card img.m { display:block; width:100%; height:auto; background:var(--line); }
+  .vid { position:relative; }
+  .vid::after { content:"▶"; position:absolute; inset:auto 10px 10px auto; background:rgba(0,0,0,.65); color:#fff; border-radius:99px; width:30px; height:30px; display:grid; place-items:center; font-size:12px; }
+  .body { padding:10px 12px 12px; }
+  .src { display:flex; gap:6px; align-items:center; font-size:12px; color:var(--mut); margin-bottom:6px; flex-wrap:wrap; }
+  .badge { border:1px solid var(--line); border-radius:6px; padding:0 6px; }
+  .who b { font-weight:600; }
+  .txt { margin:4px 0 0; white-space:pre-wrap; word-wrap:break-word; display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden; }
+  .tags { display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; }
+  .tag { background:var(--line); border-radius:6px; padding:0 7px; font-size:12px; }
+  .tag.sug { background:none; border:1px dashed var(--mut); color:var(--mut); }
+  .fav { position:absolute; top:8px; right:8px; background:rgba(0,0,0,.55); color:#fff; border:0; border-radius:99px; width:30px; height:30px; cursor:pointer; opacity:0; }
+  .fav.on { color:var(--fav); opacity:1; }
+  .card:hover .fav, .card:hover .pick { opacity:1; }
+  .pick { position:absolute; top:8px; left:8px; width:22px; height:22px; opacity:0; cursor:pointer; }
+  .selmode .pick { opacity:1; }
+  .empty { text-align:center; color:var(--mut); padding:80px 0; }
+  /* detalhe */
+  #modal { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:flex-start; justify-content:center; overflow:auto; padding:30px 12px; z-index:20; }
+  #modal.on { display:flex; }
+  .sheet { background:var(--card); border-radius:16px; width:min(920px,100%); display:grid; grid-template-columns:1.1fr 1fr; overflow:hidden; }
+  .sheet .left { background:#000; position:relative; display:flex; align-items:center; justify-content:center; min-height:320px; }
+  .sheet .left img, .sheet .left video { width:100%; max-height:86vh; object-fit:contain; display:block; }
+  .car { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.6); color:#fff; border:0; border-radius:99px; width:34px; height:34px; cursor:pointer; font-size:18px; z-index:2; }
+  .car.p { left:8px; } .car.n { right:8px; }
+  .dots { position:absolute; bottom:8px; left:0; right:0; display:flex; justify-content:center; gap:5px; pointer-events:none; }
+  .dots i { width:6px; height:6px; border-radius:99px; background:rgba(255,255,255,.4); } .dots i.on { background:#fff; }
+  @media (max-width:760px) { .sheet { grid-template-columns:1fr; } }
+  .sheet .right { padding:18px; display:flex; flex-direction:column; gap:12px; min-width:0; }
+  .sheet label { font-size:12px; color:var(--mut); display:block; margin-bottom:3px; }
+  .sheet input[type=text], .sheet textarea { width:100%; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:7px 10px; }
+  .sheet textarea { min-height:70px; resize:vertical; }
+  .full { white-space:pre-wrap; word-wrap:break-word; max-height:220px; overflow:auto; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .btn { background:var(--acc); color:var(--acc-tx); border:0; border-radius:8px; padding:7px 14px; cursor:pointer; }
+  .btn.ghost { background:none; color:var(--tx); border:1px solid var(--line); }
+  .tagx { cursor:pointer; }
+  .tagx::after { content:" ×"; color:var(--mut); }
+  /* lote */
+  #bulk { position:fixed; left:50%; bottom:18px; transform:translateX(-50%); background:var(--tx); color:var(--bg); border-radius:14px; padding:10px 14px; display:none; gap:8px; align-items:center; z-index:15; box-shadow:0 8px 30px rgba(0,0,0,.35); flex-wrap:wrap; max-width:96vw; }
+  #bulk.on { display:flex; }
+  #bulk input { background:var(--bg); color:var(--tx); border:0; border-radius:8px; padding:6px 10px; width:150px; }
+  #bulk button { background:var(--bg); color:var(--tx); border:0; border-radius:8px; padding:6px 10px; cursor:pointer; }
+  @media (max-width:820px) { aside { display:none; } .sheet { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<aside id="side"></aside>
+<section>
+  <header>
+    <input id="q" type="search" title='Exemplos: azul gato · tag:ceramica · cor:roxo · fonte:ig · pasta:ceramic · autor:fulano · tipo:video · fav:1 · -logo · "frase exata"' placeholder="Buscar… ex: azul gato  tag:x  cor:roxo  fonte:ig  -logo">
+    <button class="chip on" data-t="all">Tudo</button>
+    <button class="chip" data-t="foto">Fotos</button>
+    <button class="chip" data-t="video">Vídeos</button>
+    <button class="chip" data-t="texto">Texto</button>
+    <select id="ord">
+      <option value="novo">Mais recentes</option>
+      <option value="antigo">Mais antigos</option>
+      <option value="autor">Autor A–Z</option>
+    </select>
+    <button class="chip" id="fbtn">Filtros<span id="fn"></span></button>
+    <div class="views" id="views">
+      <button data-v="mosaico" title="Mosaico">▦ Mosaico</button>
+      <button data-v="grade" title="Grade quadrada">▩ Grade</button>
+      <button data-v="lista" title="Lista">☰ Lista</button>
+      <button data-v="tempo" title="Linha do tempo por mês">◷ Tempo</button>
+    </div>
+    <button class="chip" id="selbtn">Selecionar</button>
+    <span id="count"></span>
+    <div id="filtros"></div>
+  </header>
+  <div id="grid"></div>
+</section>
+
+<div id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="bulk">
+  <b id="bn"></b>
+  <input id="btag" placeholder="+ tag">
+  <button id="btagok">Adicionar tag</button>
+  <input id="bcat" placeholder="categoria" list="cats">
+  <button id="bcatok">Definir</button>
+  <button id="bfav">★ Favoritar</button>
+  <button id="bx">Cancelar</button>
+</div>
+<datalist id="cats"></datalist>
+
+<script>
+let ITENS = [];
+const F = { nav: ["tudo", ""], tipo: "all", q: "", ord: "novo", sel: new Set(), selMode: false, view: "mosaico",
+            f: { fonte: "", colecao: "", categoria: "", tag: "", cor: "", autor: "", de: "", ate: "" } };
+try { Object.assign(F, JSON.parse(localStorage.getItem("arquivo.prefs") || "{}")); } catch (e) {}
+const guardar = () => { try { localStorage.setItem("arquivo.prefs", JSON.stringify({ view: F.view, ord: F.ord })); } catch (e) {} };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const mid = p => "/midia/" + p.split("/").map(encodeURIComponent).join("/");
+const tipoDe = i => i.midia.videos.length ? "video" : i.midia.fotos.length ? "foto" : "texto";
+const NOMES = { x: "X (Twitter)", instagram: "Instagram" };
+
+async function api(url, corpo) {
+  const r = await fetch(url, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(corpo) });
+  return r.json();
+}
+async function carregar() {
+  ITENS = await (await fetch("/api/itens")).json();
+  barraFiltros();
+  desenhar();
+}
+
+function contar(chave) {
+  const m = new Map();
+  ITENS.forEach(i => { const v = chave(i); (Array.isArray(v) ? v : [v]).forEach(x => { if (x) m.set(x, (m.get(x) || 0) + 1); }); });
+  return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+function navBtn(tipo, valor, nome, n) {
+  const on = F.nav[0] === tipo && F.nav[1] === valor ? " on" : "";
+  return `<button class="nav${on}" data-nav="${esc(tipo)}" data-v="${esc(valor)}"><span class="n">${esc(nome)}</span><span>${n}</span></button>`;
+}
+// só as 8 tags mais usadas (+ a tag ativa); "ver todas" expande. Todas continuam no filtro e na busca.
+function tagsLateral() {
+  const todas = contar(ET), ativa = F.nav[0] === "tag" ? F.nav[1] : null;
+  let l = F.todasTags ? todas : todas.slice(0, 8);
+  if (ativa && !l.some(([v]) => v === ativa)) l = [...l, todas.find(([v]) => v === ativa)].filter(Boolean);
+  const mais = todas.length > 8 ? `<button class="nav" id="maisTags" style="color:var(--mut)">${F.todasTags ? "ver menos" : `ver todas (${todas.length})`}</button>` : "";
+  return (l.map(([v, n]) => navBtn("tag", v, "#" + v, n)).join("") || `<div style="padding:0 8px;color:var(--mut);font-size:13px">nenhuma ainda</div>`) + mais;
+}
+function lateral() {
+  const colecoes = contar(i => `${i.fonte}|${i.colecao}`);
+  $("#side").innerHTML =
+    navBtn("tudo", "", "Tudo", ITENS.length) +
+    navBtn("fav", "", "★ Favoritos", ITENS.filter(i => i.favorito).length) +
+    navBtn("sem", "", "Sem categoria", ITENS.filter(i => !i.categoria).length) +
+    `<h2>Fonte</h2>` + contar(i => i.fonte).map(([v, n]) => navBtn("fonte", v, NOMES[v] || v, n)).join("") +
+    `<h2>Pasta / coleção</h2>` + colecoes.map(([v, n]) => { const [f, c] = v.split("|"); return navBtn("colecao", v, `${c} · ${f === "x" ? "X" : "IG"}`, n); }).join("") +
+    `<h2>Cores</h2>` + `<div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 8px">` + Object.keys(COR_HEX).map(c => {
+      const on = F.nav[0] === "cor" && F.nav[1] === c;
+      return `<button class="nav" data-nav="cor" data-v="${c}" title="${c}" style="width:24px;height:24px;padding:0;border-radius:99px;background:${COR_HEX[c]};border:2px solid ${on ? "var(--acc)" : "var(--line)"}"></button>`;
+    }).join("") + `</div>` +
+    `<h2>Categorias</h2>` + (contar(CAT).map(([v, n]) => navBtn("cat", v, v, n)).join("") || `<div style="padding:0 8px;color:var(--mut);font-size:13px">nenhuma ainda</div>`) +
+    `<h2>Tags</h2>` + tagsLateral();
+  $("#cats").innerHTML = contar(CAT).map(([v]) => `<option value="${esc(v)}">`).join("");
+}
+
+const norm = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const COR_HEX = { preto:"#111", branco:"#fff", cinza:"#888", vermelho:"#e03131", laranja:"#f08c00", marrom:"#8d5524", amarelo:"#fcc419",
+                  verde:"#2f9e44", ciano:"#15aabf", azul:"#1c7ed6", roxo:"#7048e8", rosa:"#e64980" };
+const COR_ALIAS = { black:"preto", white:"branco", gray:"cinza", grey:"cinza", red:"vermelho", orange:"laranja", brown:"marrom", yellow:"amarelo",
+                    green:"verde", cyan:"ciano", turquesa:"ciano", blue:"azul", purple:"roxo", violet:"roxo", violeta:"roxo", pink:"rosa", magenta:"rosa" };
+const corDe = t => COR_HEX[t] ? t : COR_ALIAS[t];
+const FONTE_ALIAS = { ig: "instagram", insta: "instagram", twitter: "x" };
+
+// "azul gato tag:cerâmica -logo fonte:ig cor:roxo pasta:ceramic autor:fulano tipo:video fav:1 \"frase exata\""
+function parseBusca(q) {
+  const out = [], re = /(-?)(?:(\w+):)?(?:"([^"]+)"|(\S+))/g; let m;
+  while ((m = re.exec(q))) out.push({ neg: !!m[1], campo: m[2] ? norm(m[2]) : "", v: norm(m[3] ?? m[4]) });
+  return out;
+}
+const sug = i => (i.auto && i.auto.tags || []).filter(t => !i.tags.includes(t));   // sugeridas, ainda não aceitas
+const ET = i => [...i.tags, ...sug(i)];                                              // reais + sugeridas (busca/filtro)
+const CAT = i => i.categoria || (i.auto && i.auto.categoria) || "";                  // categoria real ou sugerida
+function casa(i, t) {
+  const h = i._h ||= norm(`${i.texto} ${i.nome} ${i.usuario} ${CAT(i)} ${i.nota} ${ET(i).join(" ")} ${i.colecao}`);
+  const cores = (i.auto && i.auto.cores) || [];
+  switch (t.campo) {
+    case "tag": return ET(i).some(x => norm(x).includes(t.v));
+    case "cat": case "categoria": return norm(CAT(i)).includes(t.v);
+    case "fonte": return i.fonte === (FONTE_ALIAS[t.v] || t.v);
+    case "pasta": case "colecao": return norm(i.colecao).includes(t.v);
+    case "autor": return norm(`${i.nome} ${i.usuario}`).includes(t.v);
+    case "cor": return cores.includes(corDe(t.v));
+    case "tipo": return tipoDe(i) === t.v || (t.v === "foto" && tipoDe(i) === "foto");
+    case "fav": return i.favorito === !["0", "nao", "no", "false"].includes(t.v);
+    default: { // palavra solta: texto OU cor da imagem (buscar "azul" acha também o que é azul)
+      const c = corDe(t.v);
+      return h.includes(t.v) || !!(c && cores.includes(c));
+    }
+  }
+}
+function passaFiltros(i) {
+  const f = F.f, dia = (i.data || "").slice(0, 10);
+  return (!f.fonte || i.fonte === f.fonte) &&
+    (!f.colecao || `${i.fonte}|${i.colecao}` === f.colecao) &&
+    (!f.categoria || (f.categoria === "__sem" ? !CAT(i) : CAT(i) === f.categoria)) &&
+    (!f.tag || ET(i).includes(f.tag)) &&
+    (!f.cor || ((i.auto && i.auto.cores) || []).includes(f.cor)) &&
+    (!f.autor || norm(`${i.nome} ${i.usuario}`).includes(norm(f.autor))) &&
+    (!f.de || (dia && dia >= f.de)) && (!f.ate || (dia && dia <= f.ate));
+}
+function barraFiltros() {
+  const opt = (arr, fmt = x => x) => arr.map(([v, n]) => `<option value="${esc(v)}">${esc(fmt(v))} (${n})</option>`).join("");
+  const sel = (id, rotulo, html) => `<label>${rotulo}<select id="f_${id}"><option value="">todos</option>${html}</select></label>`;
+  $("#filtros").innerHTML =
+    sel("fonte", "Fonte", opt(contar(i => i.fonte), v => NOMES[v] || v)) +
+    sel("colecao", "Pasta", opt(contar(i => `${i.fonte}|${i.colecao}`), v => { const [f, c] = v.split("|"); return `${c} · ${f === "x" ? "X" : "IG"}`; })) +
+    sel("categoria", "Categoria", `<option value="__sem">(sem categoria)</option>` + opt(contar(CAT))) +
+    sel("tag", "Tag", opt(contar(ET), v => "#" + v)) +
+    sel("cor", "Cor", Object.keys(COR_HEX).map(c => `<option value="${c}">${c}</option>`).join("")) +
+    `<label>Autor<input type="text" id="f_autor" placeholder="nome ou @"></label>` +
+    `<label>De<input type="date" id="f_de"></label><label>Até<input type="date" id="f_ate"></label>` +
+    `<button class="chip" id="f_limpar" style="align-self:end">Limpar</button>`;
+  Object.keys(F.f).forEach(k => { const el = $("#f_" + k); if (el) el.value = F.f[k]; });
+  $("#filtros").onchange = $("#filtros").oninput = e => {
+    const k = e.target.id.replace("f_", ""); if (k in F.f) { F.f[k] = e.target.value; desenhar(); }
+  };
+  $("#f_limpar").onclick = () => { Object.keys(F.f).forEach(k => F.f[k] = ""); barraFiltros(); desenhar(); };
+}
+
+function filtrados() {
+  const [nt, nv] = F.nav, toks = parseBusca(F.q);
+  let l = ITENS.filter(i =>
+    (nt === "tudo" || (nt === "fav" && i.favorito) || (nt === "sem" && !CAT(i)) || (nt === "fonte" && i.fonte === nv) ||
+     (nt === "colecao" && `${i.fonte}|${i.colecao}` === nv) || (nt === "cat" && CAT(i) === nv) || (nt === "tag" && ET(i).includes(nv)) ||
+     (nt === "cor" && ((i.auto && i.auto.cores) || []).includes(nv))) &&
+    (F.tipo === "all" || tipoDe(i) === F.tipo) &&
+    passaFiltros(i) &&
+    toks.every(t => casa(i, t) !== t.neg));
+  const d = i => i.data || "";
+  if (F.ord === "novo") l.sort((a, b) => d(b).localeCompare(d(a)));
+  if (F.ord === "antigo") l.sort((a, b) => d(a).localeCompare(d(b)));
+  if (F.ord === "autor") l.sort((a, b) => (a.usuario || "").localeCompare(b.usuario || ""));
+  return l;
+}
+
+function card(i) {
+  const capa = i.midia.poster || i.midia.fotos[0];
+  const media = capa ? `<div class="thumb${i.midia.videos.length ? " vid" : ""}"><img class="m" loading="lazy" src="${mid(capa)}" alt=""></div>` : "";
+  const nome = i.nome || i.usuario || "";
+  const av = i.midia.avatar ? `<img class="av" loading="lazy" src="${mid(i.midia.avatar)}" alt="">` : `<span class="av">${esc((nome[0] || "?").toUpperCase())}</span>`;
+  return `<article class="card${capa ? "" : " post"}${F.sel.has(i.uid) ? " sel" : ""}" data-uid="${esc(i.uid)}">
+    <input class="pick" type="checkbox" ${F.sel.has(i.uid) ? "checked" : ""}>
+    <button class="fav${i.favorito ? " on" : ""}" title="Favoritar">★</button>
+    ${media}
+    <div class="body">
+      <div class="who">${av}<div class="nm"><b>${esc(nome)}</b><br><span style="color:var(--mut);font-size:12px">${i.usuario ? "@" + esc(i.usuario) : ""}</span></div></div>
+      ${i.texto ? `<p class="txt">${esc(i.texto)}</p>` : ""}
+      ${i.tags.length || sug(i).length ? `<div class="tags">${i.tags.map(t => `<span class="tag">#${esc(t)}</span>`).join("")}${sug(i).map(t => `<span class="tag sug">#${esc(t)}</span>`).join("")}</div>` : ""}
+      <div class="src"><span class="badge">${i.fonte === "x" ? "X" : "IG"}</span><span>📁 ${esc(i.colecao)}</span>${CAT(i) ? `<span class="badge"${i.categoria ? "" : ` style="opacity:.6;border:1px dashed var(--mut)"`}>${esc(CAT(i))}</span>` : ""}</div>
+    </div></article>`;
+}
+
+function desenhar() {
+  lateral();
+  const l = filtrados();
+  const g = $("#grid");
+  g.className = "v-" + F.view;
+  if (!l.length) g.innerHTML = `<div class="empty">Nada encontrado</div>`;
+  else if (F.view === "tempo") {
+    const grupos = new Map();
+    l.forEach(i => { const k = (i.data || "").slice(0, 7) || "sem data"; (grupos.get(k) || grupos.set(k, []).get(k)).push(i); });
+    g.innerHTML = [...grupos].map(([k, arr]) => {
+      const nome = k === "sem data" ? "Sem data" : new Date(k + "-15").toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      return `<div class="grp"><h3>${nome} · ${arr.length}</h3><div class="g">${arr.map(card).join("")}</div></div>`;
+    }).join("");
+  } else g.innerHTML = l.map(card).join("");
+  document.querySelectorAll("#views button").forEach(b => b.classList.toggle("on", b.dataset.v === F.view));
+  const nf = Object.values(F.f).filter(Boolean).length;
+  $("#fn").innerHTML = nf ? `<span class="badge-n">${nf}</span>` : "";
+  $("#count").textContent = `${l.length} / ${ITENS.length}`;
+  document.body.classList.toggle("selmode", F.selMode);
+  $("#bulk").classList.toggle("on", F.sel.size > 0);
+  $("#bn").textContent = `${F.sel.size} selecionado(s)`;
+}
+
+async function salvar(i, campos) {
+  Object.assign(i, await api("/api/item", { uid: i.uid, ...campos }));
+  delete i._h;
+}
+
+function abrir(uid) {
+  const i = ITENS.find(x => x.uid === uid); if (!i) return;
+  const m = i.midia;
+  // carrossel: vídeos e fotos viram "slides"; um por vez, com setas
+  const slides = m.slides ? m.slides.map(x => ({ v: x.t === "v", s: x.src })) : [...m.videos.map(v => ({ v: 1, s: v })), ...m.fotos.map(p => ({ s: p }))];
+  if (!slides.length && m.poster) slides.push({ s: m.poster });
+  let k = 0;
+  const slide = () => { const x = slides[k];
+    return (x.v ? `<video controls autoplay muted playsinline preload="metadata" ${m.poster ? `poster="${mid(m.poster)}"` : ""} src="${mid(x.s)}"></video>` : `<img src="${mid(x.s)}" alt="">`) +
+      (slides.length > 1 ? `<button class="car p">‹</button><button class="car n">›</button><div class="dots">${slides.map((_, j) => `<i class="${j === k ? "on" : ""}"></i>`).join("")}</div>` : ""); };
+  const left = slides.length ? "" : "";
+  $("#sheet").innerHTML = `
+    <div class="left" id="lm">${slides.length ? slide() : `<div style="padding:30px;color:#888">sem mídia</div>`}</div>
+    <div class="right">
+      <div class="src"><span class="badge">${NOMES[i.fonte] || i.fonte}</span><span>📁 ${esc(i.colecao)}</span><span>${i.data ? new Date(i.data).toLocaleDateString() : ""}</span></div>
+      <div class="who">${m.avatar ? `<img class="av" src="${mid(m.avatar)}" alt="">` : `<span class="av">${esc(((i.nome || i.usuario || "?")[0]).toUpperCase())}</span>`}<div class="nm"><b>${esc(i.nome || i.usuario || "")}</b><br><span style="color:var(--mut);font-size:12px">${i.usuario ? "@" + esc(i.usuario) : ""}</span></div></div>
+      ${i.auto && i.auto.cores && i.auto.cores.length ? `<div class="row">${i.auto.cores.map(c => `<span title="${c}" style="width:16px;height:16px;border-radius:99px;background:${COR_HEX[c]};border:1px solid var(--line)"></span>`).join("")}<span style="color:var(--mut);font-size:12px">cores detectadas</span></div>` : ""}
+      <div class="full">${esc(i.texto)}${i.texto_cortado ? `\n\n[texto cortado]` : ""}</div>
+      <div><label>Categoria</label><input type="text" id="mc" list="cats" value="${esc(i.categoria)}" placeholder="${esc(CAT(i))}">
+        ${!i.categoria && CAT(i) ? `<div class="tags"><span class="tag sug" id="mcs" style="cursor:pointer">+ ${esc(CAT(i))} (sugerida)</span></div>` : ""}</div>
+      <div><label>Tags (Enter para adicionar)</label>
+        <div class="tags" id="mt">${i.tags.map(t => `<span class="tag tagx" data-t="${esc(t)}">#${esc(t)}</span>`).join("")}</div>
+        <input type="text" id="mn" placeholder="nova tag" style="margin-top:6px">
+        ${sug(i).length ? `<label style="margin-top:8px">Sugeridas (clique para aceitar)</label><div class="tags" id="ms">${sug(i).map(t => `<span class="tag sug" data-t="${esc(t)}" style="cursor:pointer">+ #${esc(t)}</span>`).join("")}</div>` : ""}</div>
+      <div><label>Nota</label><textarea id="mo">${esc(i.nota)}</textarea></div>
+      <div class="row">
+        <button class="btn" id="mf">${i.favorito ? "★ Favorito" : "☆ Favoritar"}</button>
+        ${i.url ? `<a class="btn ghost" href="${esc(i.url)}" target="_blank" rel="noopener" style="text-decoration:none">Abrir original ↗</a>` : ""}
+        <button class="btn ghost" id="mx" style="margin-left:auto">Fechar</button>
+      </div>
+    </div>`;
+  $("#modal").classList.add("on");
+  const fechar = () => { $("#modal").classList.remove("on"); $("#sheet").innerHTML = ""; barraFiltros(); desenhar(); };
+  $("#mx").onclick = fechar;
+  const ir = d => { k = (k + d + slides.length) % slides.length; $("#lm").innerHTML = slide(); };
+  $("#lm").onclick = e => { const b = e.target.closest(".car"); if (b) ir(b.classList.contains("n") ? 1 : -1); };
+  window.__setas = e => { if (!$("#modal").classList.contains("on") || slides.length < 2 || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    if (e.key === "ArrowRight") ir(1); if (e.key === "ArrowLeft") ir(-1); };
+  $("#mc").onchange = e => salvar(i, { categoria: e.target.value });
+  if ($("#mcs")) $("#mcs").onclick = async () => { await salvar(i, { categoria: CAT(i) }); abrir(uid); };
+  $("#mo").onchange = e => salvar(i, { nota: e.target.value });
+  $("#mf").onclick = async e => { await salvar(i, { favorito: !i.favorito }); e.target.textContent = i.favorito ? "★ Favorito" : "☆ Favoritar"; };
+  $("#mn").onkeydown = async e => {
+    if (e.key !== "Enter" || !e.target.value.trim()) return;
+    await salvar(i, { tags: [...i.tags, e.target.value] }); abrir(uid);
+    $("#mn").focus();
+  };
+  if ($("#ms")) $("#ms").onclick = async e => {
+    const t = e.target.closest(".sug"); if (!t) return;
+    await salvar(i, { tags: [...i.tags, t.dataset.t] }); abrir(uid);
+  };
+  $("#mt").onclick = async e => {
+    const t = e.target.closest(".tagx"); if (!t) return;
+    await salvar(i, { tags: i.tags.filter(x => x !== t.dataset.t) }); abrir(uid);
+  };
+}
+
+$("#side").addEventListener("click", e => {
+  const b = e.target.closest(".nav"); if (!b) return;
+  if (b.id === "maisTags") { F.todasTags = !F.todasTags; return desenhar(); }
+  const ja = F.nav[0] === b.dataset.nav && F.nav[1] === b.dataset.v;     // clicar de novo no item ativo desmarca
+  F.nav = ja && b.dataset.nav !== "tudo" ? ["tudo", ""] : [b.dataset.nav, b.dataset.v];
+  desenhar();
+});
+$("#q").addEventListener("input", e => { F.q = e.target.value; desenhar(); });
+$("#ord").addEventListener("change", e => { F.ord = e.target.value; guardar(); desenhar(); });
+$("#ord").value = F.ord;
+$("#views").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { F.view = b.dataset.v; guardar(); desenhar(); } });
+$("#fbtn").onclick = e => { $("#filtros").classList.toggle("on"); e.currentTarget.classList.toggle("on"); };
+document.querySelectorAll(".chip[data-t]").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".chip[data-t]").forEach(c => c.classList.toggle("on", c === b)); F.tipo = b.dataset.t; desenhar();
+});
+$("#selbtn").onclick = e => { F.selMode = !F.selMode; e.target.classList.toggle("on", F.selMode); if (!F.selMode) F.sel.clear(); desenhar(); };
+$("#grid").addEventListener("click", async e => {
+  const c = e.target.closest(".card"); if (!c) return;
+  const i = ITENS.find(x => x.uid === c.dataset.uid);
+  if (e.target.closest(".fav")) { await salvar(i, { favorito: !i.favorito }); return desenhar(); }
+  if (e.target.closest(".pick") || F.selMode) { F.sel.has(i.uid) ? F.sel.delete(i.uid) : F.sel.add(i.uid); return desenhar(); }
+  abrir(i.uid);
+});
+$("#modal").addEventListener("click", e => { if (e.target.id === "modal") { $("#modal").classList.remove("on"); $("#sheet").innerHTML = ""; desenhar(); } });
+document.addEventListener("keydown", e => { window.__setas && window.__setas(e); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { $("#modal").classList.remove("on"); $("#sheet").innerHTML = ""; } });
+
+async function lote(extra) { await api("/api/lote", { uids: [...F.sel], ...extra }); F.sel.clear(); await carregar(); }
+$("#btagok").onclick = () => { const v = $("#btag").value.trim(); if (v) { lote({ add_tags: v.split(",") }); $("#btag").value = ""; } };
+$("#bcatok").onclick = () => { lote({ categoria: $("#bcat").value }); $("#bcat").value = ""; };
+$("#bfav").onclick = () => lote({ favorito: true });
+$("#bx").onclick = () => { F.sel.clear(); desenhar(); };
+carregar();
+</script>
+</body>
+</html>

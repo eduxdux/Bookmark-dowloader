@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mural de bookmarks</title>
+<style>
+  :root { --bg:#f6f6f4; --card:#fff; --tx:#16181c; --mut:#6b7280; --line:#e5e5e0; --acc:#1d9bf0; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0f1114; --card:#181b20; --tx:#e7e9ea; --mut:#8b949e; --line:#2a2e35; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--tx); font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  header { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid var(--line);
+           display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:12px 16px; }
+  input[type=search], select { background:var(--card); color:var(--tx); border:1px solid var(--line); border-radius:8px; padding:8px 12px; font:inherit; }
+  input[type=search] { flex:1 1 220px; min-width:0; }
+  .chips { display:flex; gap:6px; }
+  .chip { border:1px solid var(--line); background:var(--card); color:var(--tx); border-radius:99px; padding:6px 12px; cursor:pointer; font:inherit; }
+  .chip.on { background:var(--tx); color:var(--bg); border-color:var(--tx); }
+  #count { color:var(--mut); font-size:13px; margin-left:auto; }
+  main { columns:300px; column-gap:14px; padding:16px; }
+  .card { break-inside:avoid; background:var(--card); border:1px solid var(--line); border-radius:14px; margin:0 0 14px; overflow:hidden; }
+  .media img, .media video { display:block; width:100%; height:auto; background:#000; }
+  .media > * + * { margin-top:2px; }
+  .body { padding:12px 14px 14px; }
+  .who { display:flex; align-items:center; gap:10px; margin-bottom:8px; text-decoration:none; color:inherit; }
+  .who img { width:34px; height:34px; border-radius:50%; object-fit:cover; background:var(--line); }
+  .who b { display:block; line-height:1.2; }
+  .who span { color:var(--mut); font-size:13px; }
+  .txt { white-space:pre-wrap; word-wrap:break-word; margin:0; }
+  .cut { color:var(--mut); font-size:12px; margin-top:6px; }
+  .foot { display:flex; justify-content:space-between; margin-top:10px; font-size:12px; color:var(--mut); }
+  .foot a { color:var(--mut); }
+  .empty { text-align:center; color:var(--mut); padding:60px 0; }
+</style>
+</head>
+<body>
+<header>
+  <input id="q" type="search" placeholder="Buscar / Search…">
+  <div class="chips" id="chips">
+    <button class="chip on" data-f="all">Todos / All</button>
+    <button class="chip" data-f="foto">Fotos / Photos</button>
+    <button class="chip" data-f="video">Vídeos / Videos</button>
+    <button class="chip" data-f="texto">Texto / Text</button>
+  </div>
+  <select id="autor"><option value="">Autor / Author</option></select>
+  <select id="ord">
+    <option value="salvo">Ordem salva / Saved order</option>
+    <option value="novo">Mais recentes / Newest</option>
+    <option value="antigo">Mais antigos / Oldest</option>
+  </select>
+  <span id="count"></span>
+</header>
+<main id="grid"></main>
+<script>
+const DATA = /*__DATA__*/[];
+const $ = s => document.querySelector(s);
+const esc = s => (s||"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fotos = t => (t.local && t.local.fotos) || [];
+const videos = t => (t.local && t.local.videos) || [];
+const tipo = t => videos(t).length || t.has_video ? "video" : fotos(t).length ? "foto" : "texto";
+let filtro = "all";
+
+const autores = [...new Set(DATA.map(t => t.usuario).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+$("#autor").innerHTML += autores.map(a => `<option>${esc(a)}</option>`).join("");
+
+function card(t) {
+  const v = videos(t), f = fotos(t), poster = t.local && t.local.poster;
+  let media = "";
+  if (v.length) media = v.map(p => `<video controls preload="none" ${poster?`poster="${esc(poster)}"`:""} src="${esc(p)}"></video>`).join("");
+  else if (f.length) media = f.map(p => `<img loading="lazy" src="${esc(p)}" alt="">`).join("");
+  else if (poster) media = `<img loading="lazy" src="${esc(poster)}" alt="">`;
+  const av = (t.local && t.local.avatar) || t.avatar || "";
+  const data = t.data ? new Date(t.data).toLocaleDateString() : "";
+  return `<article class="card">
+    ${media ? `<div class="media">${media}</div>` : ""}
+    <div class="body">
+      <a class="who" href="${esc(t.url)}" target="_blank" rel="noopener">
+        ${av ? `<img src="${esc(av)}" alt="" loading="lazy">` : ""}
+        <div><b>${esc(t.nome || t.usuario)}</b><span>@${esc(t.usuario)}</span></div>
+      </a>
+      ${t.texto ? `<p class="txt">${esc(t.texto)}</p>` : ""}
+      ${t.texto_cortado ? `<div class="cut">Texto cortado — veja o original / truncated text</div>` : ""}
+      <div class="foot"><span>${data}</span><a href="${esc(t.url)}" target="_blank" rel="noopener">Abrir / Open ↗</a></div>
+    </div></article>`;
+}
+
+function render() {
+  const q = $("#q").value.trim().toLowerCase(), au = $("#autor").value, ord = $("#ord").value;
+  let l = DATA.filter(t =>
+    (filtro === "all" || tipo(t) === filtro) &&
+    (!au || t.usuario === au) &&
+    (!q || `${t.texto} ${t.nome} ${t.usuario}`.toLowerCase().includes(q)));
+  if (ord === "novo") l = l.slice().sort((a,b) => (b.data||"").localeCompare(a.data||""));
+  if (ord === "antigo") l = l.slice().sort((a,b) => (a.data||"").localeCompare(b.data||""));
+  $("#grid").innerHTML = l.length ? l.map(card).join("") : `<div class="empty">Nada encontrado / Nothing found</div>`;
+  $("#count").textContent = `${l.length} / ${DATA.length}`;
+}
+$("#q").addEventListener("input", render);
+$("#autor").addEventListener("change", render);
+$("#ord").addEventListener("change", render);
+$("#chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c === b));
+  filtro = b.dataset.f; render();
+});
+render();
+</script>
+</body>
+</html>

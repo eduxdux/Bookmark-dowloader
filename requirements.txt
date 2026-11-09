@@ -1,0 +1,6 @@
+# Necessário para baixar vídeos / needed to download videos
+yt-dlp
+# Opcional: busca por cor ("azul" acha o que é azul) / optional: colour search
+Pillow
+numpy
+# Também precisa do ffmpeg instalado no sistema (para unir áudio+vídeo) / ffmpeg must also be installed on the system
