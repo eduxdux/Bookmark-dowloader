@@ -18,8 +18,8 @@ Transforma seus **bookmarks do X (Twitter)** e uma **coleção salva do Instagra
 Você precisa de **Python 3.9+** ([python.org](https://www.python.org/downloads/); no Windows marque "Add to PATH") e do **ffmpeg** (só para vídeos).
 
 ```bash
-git clone <URL-DESTE-REPOSITORIO>
-cd salvos-archive
+git clone https://github.com/eduxdux/Bookmark-dowloader.git
+cd Bookmark-dowloader
 pip install -r requirements.txt
 ```
 

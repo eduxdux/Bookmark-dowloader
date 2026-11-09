@@ -20,8 +20,8 @@ Turns your **X (Twitter) bookmarks** and an **Instagram saved collection** into 
 You need **Python 3.9+** ([python.org](https://www.python.org/downloads/); on Windows tick "Add to PATH") and **ffmpeg** (videos only).
 
 ```bash
-git clone <THIS-REPO-URL>
-cd salvos-archive
+git clone https://github.com/eduxdux/Bookmark-dowloader.git
+cd Bookmark-dowloader
 pip install -r requirements.txt
 ```
 
